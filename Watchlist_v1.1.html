@@ -1,0 +1,2279 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+<meta name="apple-mobile-web-app-title" content="Watchlist"/>
+<meta name="theme-color" content="#0D0F14"/>
+<title>Watchlist</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}\nbody{background:#0D0F14;font-family:'DM Sans',system-ui,sans-serif;color:#E8EAF0;overscroll-behavior:none;}\n::-webkit-scrollbar{display:none;}\ninput,button{font-family:inherit;}\nbutton{transition:opacity 0.15s;}\nbutton:active{opacity:0.75;}\n</style>
+</head>
+<body>
+<div id="root"></div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+<script>
+const {
+  useState,
+  useEffect,
+  useCallback,
+  useRef
+} = React;
+const C = {
+  bg: "#0D0F14",
+  surface: "#161920",
+  border: "#252A38",
+  amber: "#E8A838",
+  amberDim: "#A87820",
+  gold: "#F5D060",
+  red: "#E05050",
+  green: "#4CAF50",
+  muted: "#6B7494",
+  text: "#E8EAF0",
+  textDim: "#9BA3C0",
+  together: "#5B8FE8",
+  solo: "#8B6BE8",
+  imdb: "#F5C518",
+  watching: "#3BBFA3"
+};
+const RC = {
+  loved: "#F5D060",
+  liked: "#E8A838",
+  didnt_like: "#E05050"
+};
+const RL = {
+  loved: "❤️ Loved",
+  liked: "👍 Liked",
+  didnt_like: "👎 Didn't like"
+};
+const AC = {
+  together: C.together,
+  solo: C.solo
+};
+const GH = {
+  "Sci-Fi": 220,
+  "Thriller": 270,
+  "Mystery": 250,
+  "Crime": 30,
+  "Drama": 160,
+  "Horror": 0,
+  "Comedy": 55,
+  "Action": 15,
+  "Animation": 190,
+  "Documentary": 120,
+  "Sport": 100,
+  "Romance": 330,
+  "Fantasy": 290,
+  "Spy": 210,
+  "Period": 40,
+  "Adventure": 80,
+  "Superhero": 200,
+  "Mockumentary": 60,
+  "Dark Comedy": 280,
+  "Satire": 65,
+  "Nordic Noir": 230,
+  "Alt-History": 175,
+  "Teen": 340,
+  "Psychological": 260,
+  "Survival": 130,
+  "War": 20,
+  "History": 45,
+  "Biography": 150,
+  "Epic": 195,
+  "Musical": 310
+};
+function gStyle(g) {
+  const h = GH[g] ?? g.split("").reduce((a, c) => a + c.charCodeAt(0), 0) % 360;
+  return {
+    background: `hsla(${h},45%,35%,0.25)`,
+    border: `1px solid hsla(${h},55%,50%,0.35)`,
+    color: `hsl(${h},70%,75%)`,
+    fontSize: 11,
+    padding: "2px 8px",
+    borderRadius: 20,
+    display: "inline-block",
+    whiteSpace: "nowrap",
+    cursor: "default"
+  };
+}
+const MOVIES = [{\n  id: "m1",
+  title: "Monkey Man",
+  type: "movie",
+  audience: "solo",
+  year: "2024",
+  genre: ["Action", "Thriller"],
+  plot: "A young man seeks vengeance against corrupt leaders who murdered his mother.",
+  rt_critics: 89,
+  rt_audience: 83,
+  imdb: 6.9,
+  streaming_au: ["Prime Video"],
+  watched: false,
+  watching: false,
+  rating: null,
+  added: "2024-01-01"
+}, {
+  id: "m2",
+  title: "Sexy Beast",
+  type: "movie",
+  audience: "together",
+  year: "2000",
+  genre: ["Crime", "Thriller"],
+  plot: "A retired safecracker is pulled back into the criminal underworld by a terrifying gangster.",
+  rt_critics: 86,
+  rt_audience: 87,
+  imdb: 7.3,
+  streaming_au: ["Stan"],
+  watched: false,
+  watching: false,
+  rating: null,
+  added: "2024-01-01"
+}, {
+  id: "m3",
+  title: "Aftersun",
+  type: "movie",
+  audience: "solo",
+  year: "2022",
+  genre: ["Drama"],
+  plot: "A daughter reflects on a shared holiday with her father, sensing a melancholy she couldn't understand as a child.",
+  rt_critics: 96,
+  rt_audience: 81,
+  imdb: 7.6,
+  streaming_au: ["Mubi", "Prime Video"],
+  watched: false,
+  watching: false,
+  rating: null,
+  added: "2024-01-01"
+}, {
+  id: "m4",
+  title: "The Worst Person in the World",
+  type: "movie",
+  audience: "together",
+  year: "2021",
+  genre: ["Drama", "Romance", "Comedy"],
+  plot: "A Norwegian woman navigates love, career and identity across four years of her life.",
+  rt_critics: 97,
+  rt_audience: 88,
+  imdb: 7.7,
+  streaming_au: ["SBS On Demand", "Mubi"],
+  watched: false,
+  watching: false,
+  rating: null,
+  added: "2024-01-01"
+}, {
+  id: "m5",
+  title: "The Platform",
+  type: "movie",
+  audience: "solo",
+  year: "2019",
+  genre: ["Sci-Fi", "Thriller", "Horror"],
+  plot: "In a vertical prison, food descends on a platform — those at the top eat well, those below starve.",
+  rt_critics: 79,
+  rt_audience: 87,
+  imdb: 7.0,
+  streaming_au: ["Netflix"],
+  watched: false,
+  watching: false,
+  rating: null,
+  added: "2024-01-01"
+}, {
+  id: "m6",
+  title: "The Killing of a Sacred Deer",
+  type: "movie",
+  audience: "solo",
+  year: "2017",
+  genre: ["Thriller", "Drama", "Horror"],
+  plot: "A surgeon's family falls under a mysterious curse imposed by a disturbed teenager.",
+  rt_critics: 79,
+  rt_audience: 72,
+  imdb: 7.0,
+  streaming_au: ["Stan"],
+  watched: false,
+  watching: false,
+  rating: null,
+  added: "2024-01-01"
+}, {
+  id: "m7",
+  title: "TMNT: Mutant Mayhem",
+  type: "movie",
+  audience: "together",
+  year: "2023",
+  genre: ["Animation", "Action", "Comedy"],
+  plot: "The Turtles emerge from the sewers and try to earn acceptance from New York City by fighting crime.",
+  rt_critics: 96,
+  rt_audience: 92,
+  imdb: 7.3,
+  streaming_au: ["Paramount+"],
+  watched: false,
+  watching: false,
+  rating: null,
+  added: "2024-01-01"
+}, {
+  id: "m8",
+  title: "Stalker",
+  type: "movie",
+  audience: "solo",
+  year: "1979",
+  genre: ["Sci-Fi", "Drama"],
+  plot: "A guide leads two men through a forbidden zone to find a room said to grant wishes.",
+  rt_critics: 100,
+  rt_audience: 93,
+  imdb: 8.1,
+  streaming_au: ["Mubi"],
+  watched: false,
+  watching: false,
+  rating: null,
+  added: "2024-01-01"
+}, {
+  id: "m9",
+  title: "Copshop",
+  type: "movie",
+  audience: "solo",
+  year: "2021",
+  genre: ["Action", "Thriller", "Comedy"],
+  plot: "A con artist and a hitman face off inside a small-town police station.",
+  rt_critics: 82,
+  rt_audience: 73,
+  imdb: 6.5,
+  streaming_au: ["Prime Video"],
+  watched: false,
+  watching: false,
+  rating: null,
+  added: "2024-01-01"
+}, {
+  id: "m10",
+  title: "Kimi",
+  type: "movie",
+  audience: "solo",
+  year: "2022",
+  genre: ["Thriller", "Mystery"],
+  plot: "An agoraphobic tech worker uncovers evidence of a violent crime through an AI home device.",
+  rt_critics: 92,
+  rt_audience: 71,
+  imdb: 6.8,
+  streaming_au: ["Binge"],
+  watched: false,
+  watching: false,
+  rating: null,
+  added: "2024-01-01"
+}, {
+  id: "m11",
+  title: "No Sudden Move",
+  type: "movie",
+  audience: "solo",
+  year: "2021",
+  genre: ["Crime", "Mystery", "Thriller"],
+  plot: "A group of criminals are hired for a seemingly straightforward job in 1950s Detroit.",
+  rt_critics: 92,
+  rt_audience: 71,
+  imdb: 6.7,
+  streaming_au: ["Binge"],
+  watched: false,
+  watching: false,
+  rating: null,
+  added: "2024-01-01"
+}, {
+  id: "m12",
+  title: "Notre-Dame on Fire",
+  type: "movie",
+  audience: "together",
+  year: "2022",
+  genre: ["Drama", "History"],
+  plot: "A gripping recreation of the 2019 fire that devastated Notre-Dame Cathedral in Paris.",
+  rt_critics: 89,
+  rt_audience: 75,
+  imdb: 6.8,
+  streaming_au: ["Prime Video"],
+  watched: false,
+  watching: false,
+  rating: null,
+  added: "2024-01-01"
+}, {
+  id: "m13",
+  title: "Brian and Charles",
+  type: "movie",
+  audience: "together",
+  year: "2022",
+  genre: ["Comedy", "Drama"],
+  plot: "A lonely inventor builds a robot who comes to life and turns his world upside down.",
+  rt_critics: 89,
+  rt_audience: 90,
+  imdb: 7.0,
+  streaming_au: ["Stan"],
+  watched: false,
+  watching: false,
+  rating: null,
+  added: "2024-01-01"
+}, {
+  id: "m14",
+  title: "The Unbearable Weight of Massive Talent",
+  type: "movie",
+  audience: "together",
+  year: "2022",
+  genre: ["Action", "Comedy"],
+  plot: "Nicolas Cage must channel his iconic characters when caught between a dangerous super-fan and a CIA agent.",
+  rt_critics: 87,
+  rt_audience: 82,
+  imdb: 7.0,
+  streaming_au: ["Netflix"],
+  watched: false,
+  watching: false,
+  rating: null,
+  added: "2024-01-01"
+}, {
+  id: "m15",
+  title: "The Duke",
+  type: "movie",
+  audience: "together",
+  year: "2020",
+  genre: ["Comedy", "Crime"],
+  plot: "A 60-year-old taxi driver steals a Goya portrait from the National Gallery in London.",
+  rt_critics: 97,
+  rt_audience: 86,
+  imdb: 7.1,
+  streaming_au: ["Stan"],
+  watched: false,
+  watching: false,
+  rating: null,
+  added: "2024-01-01"
+}, {
+  id: "m16",
+  title: "Together",
+  type: "movie",
+  audience: "together",
+  year: "2021",
+  genre: ["Comedy", "Drama"],
+  plot: "A bickering couple discovers a strange new bond during COVID lockdown.",
+  rt_critics: 91,
+  rt_audience: 64,
+  imdb: 6.5,
+  streaming_au: ["Binge"],
+  watched: false,
+  watching: false,
+  rating: null,
+  added: "2024-01-01"
+}, {
+  id: "m17",
+  title: "An American Pickle",
+  type: "movie",
+  audience: "together",
+  year: "2020",
+  genre: ["Comedy", "Fantasy"],
+  plot: "An immigrant worker falls into a brine vat and wakes up 100 years later, perfectly preserved.",
+  rt_critics: 71,
+  rt_audience: 60,
+  imdb: 5.9,
+  streaming_au: ["Netflix"],
+  watched: false,
+  watching: false,
+  rating: null,
+  added: "2024-01-01"
+}, {
+  id: "m18",
+  title: "Unpregnant",
+  type: "movie",
+  audience: "solo",
+  year: "2020",
+  genre: ["Comedy", "Drama"],
+  plot: "A popular high schooler and her unlikely ally embark on a road trip across the country.",
+  rt_critics: 92,
+  rt_audience: 79,
+  imdb: 6.6,
+  streaming_au: ["Binge"],
+  watched: false,
+  watching: false,
+  rating: null,
+  added: "2024-01-01"
+}, {
+  id: "m19",
+  title: "Three Thousand Years of Longing",
+  type: "movie",
+  audience: "together",
+  year: "2022",
+  genre: ["Fantasy", "Drama", "Romance"],
+  plot: "A scholar frees a djinn who offers three wishes, prompting them to examine what the heart truly desires.",
+  rt_critics: 71,
+  rt_audience: 68,
+  imdb: 6.7,
+  streaming_au: ["Prime Video", "Netflix"],
+  watched: false,
+  watching: false,
+  rating: null,
+  added: "2024-01-01"
+}, {
+  id: "m20",
+  title: "Peace by Chocolate",
+  type: "movie",
+  audience: "together",
+  year: "2021",
+  genre: ["Drama", "Biography"],
+  plot: "A Syrian refugee rebuilds his family's chocolate business in a small Canadian town.",
+  rt_critics: 88,
+  rt_audience: 93,
+  imdb: 6.9,
+  streaming_au: [],
+  watched: false,
+  watching: false,
+  rating: null,
+  added: "2024-01-01"
+}, {
+  id: "m21",
+  title: "AKA",
+  type: "movie",
+  audience: "solo",
+  year: "2023",
+  genre: ["Action", "Thriller"],
+  plot: "An undercover agent forms an unexpected bond with a crime lord's young son.",
+  rt_critics: 78,
+  rt_audience: 72,
+  imdb: 6.0,
+  streaming_au: ["Netflix"],
+  watched: false,
+  watching: false,
+  rating: null,
+  added: "2024-01-01"
+}, {
+  id: "m22",
+  title: "Rogue Agent",
+  type: "movie",
+  audience: "solo",
+  year: "2022",
+  genre: ["Thriller", "Crime"],
+  plot: "A woman discovers the charming man she's dating is a dangerous con man wanted by MI5.",
+  rt_critics: 72,
+  rt_audience: 60,
+  imdb: 6.1,
+  streaming_au: ["Netflix"],
+  watched: false,
+  watching: false,
+  rating: null,
+  added: "2024-01-01"
+}, {
+  id: "m23",
+  title: "Beast",
+  type: "movie",
+  audience: "solo",
+  year: "2022",
+  genre: ["Thriller", "Action"],
+  plot: "A widowed father and his two daughters are stalked by a rogue lion in South Africa.",
+  rt_critics: 67,
+  rt_audience: 70,
+  imdb: 5.9,
+  streaming_au: ["Netflix"],
+  watched: false,
+  watching: false,
+  rating: null,
+  added: "2024-01-01"
+}, {
+  id: "m24",
+  title: "Catch the Fair One",
+  type: "movie",
+  audience: "solo",
+  year: "2021",
+  genre: ["Thriller", "Drama"],
+  plot: "A Native American boxer goes undercover to find her missing sister taken by sex traffickers.",
+  rt_critics: 96,
+  rt_audience: 78,
+  imdb: 6.6,
+  streaming_au: ["Mubi"],
+  watched: false,
+  watching: false,
+  rating: null,
+  added: "2024-01-01"
+}, {
+  id: "m25",
+  title: "Breaking",
+  type: "movie",
+  audience: "solo",
+  year: "2022",
+  genre: ["Drama", "Thriller"],
+  plot: "A Marine veteran robs a bank to draw attention to the VA's failure to support veterans.",
+  rt_critics: 96,
+  rt_audience: 84,
+  imdb: 7.1,
+  streaming_au: ["Prime Video"],
+  watched: false,
+  watching: false,
+  rating: null,
+  added: "2024-01-01"
+}, {
+  id: "m26",
+  title: "All My Friends Hate Me",
+  type: "movie",
+  audience: "together",
+  year: "2021",
+  genre: ["Comedy", "Horror"],
+  plot: "A man's birthday weekend reunion with old friends slowly descends into paranoia and dread.",
+  rt_critics: 91,
+  rt_audience: 68,
+  imdb: 6.1,
+  streaming_au: ["Stan"],
+  watched: false,
+  watching: false,
+  rating: null,
+  added: "2024-01-01"
+}, {
+  id: "m27",
+  title: "Blood & Gold",
+  type: "movie",
+  audience: "solo",
+  year: "2023",
+  genre: ["Action", "War"],
+  plot: "A deserting German soldier fights off a ruthless SS officer with help from a local villager.",
+  rt_critics: 80,
+  rt_audience: 75,
+  imdb: 6.3,
+  streaming_au: ["Netflix"],
+  watched: false,
+  watching: false,
+  rating: null,
+  added: "2024-01-01"
+}];
+const SHOWS = [{\n  id: "s1",
+  title: "Sexy Beast",
+  type: "show",
+  audience: "together",
+  year: "2024",
+  genre: ["Crime", "Thriller"],
+  plot: "Prequel series exploring how notorious gangster Don Logan became the feared criminal of the film.",
+  rt_critics: 82,
+  rt_audience: 78,
+  imdb: 7.0,
+  streaming_au: ["Paramount+"],
+  watched: false,
+  watching: false,
+  rating: null,
+  added: "2024-01-01"
+}, {
+  id: "s2",
+  title: "The Devil's Hour",
+  type: "show",
+  audience: "together",
+  year: "2022",
+  genre: ["Thriller", "Mystery", "Sci-Fi"],
+  plot: "A social worker is haunted by terrifying visions and her emotionally detached son's disturbing behaviour.",
+  rt_critics: 91,
+  rt_audience: 87,
+  imdb: 7.6,
+  streaming_au: ["Prime Video"],
+  watched: false,
+  watching: false,
+  rating: null,
+  added: "2024-01-01"
+}, {
+  id: "s3",
+  title: "The Leftovers",
+  type: "show",
+  audience: "together",
+  year: "2014",
+  genre: ["Drama", "Mystery", "Sci-Fi"],
+  plot: "The aftermath of a global event where 2% of the world's population vanishes without explanation.",
+  rt_critics: 94,
+  rt_audience: 88,
+  imdb: 8.3,
+  streaming_au: ["Binge", "Foxtel Now"],
+  watched: false,
+  watching: false,
+  rating: null,
+  added: "2024-01-01"
+}, {
+  id: "s4",
+  title: "The Shining Girls",
+  type: "show",
+  audience: "together",
+  year: "2022",
+  genre: ["Thriller", "Mystery", "Sci-Fi"],
+  plot: "A Chicago newspaper archivist finds her reality shifting when she tracks a time-travelling serial killer.",
+  rt_critics: 87,
+  rt_audience: 75,
+  imdb: 7.1,
+  streaming_au: ["Apple TV+"],
+  watched: false,
+  watching: false,
+  rating: null,
+  added: "2024-01-01"
+}, {
+  id: "s5",
+  title: "The Outsider",
+  type: "show",
+  audience: "together",
+  year: "2020",
+  genre: ["Crime", "Horror", "Mystery"],
+  plot: "A detective investigates a seemingly impossible murder that challenges his understanding of reality.",
+  rt_critics: 91,
+  rt_audience: 87,
+  imdb: 7.9,
+  streaming_au: ["Binge", "Foxtel Now"],
+  watched: false,
+  watching: false,
+  rating: null,
+  added: "2024-01-01"
+}, {
+  id: "s6",
+  title: "Disclaimer",
+  type: "show",
+  audience: "together",
+  year: "2024",
+  genre: ["Thriller", "Drama", "Mystery"],
+  plot: "A documentary filmmaker discovers a novel featuring a damning secret from her own past.",
+  rt_critics: 75,
+  rt_audience: 72,
+  imdb: 7.1,
+  streaming_au: ["Apple TV+"],
+  watched: false,
+  watching: false,
+  rating: null,
+  added: "2024-01-01"
+}, {
+  id: "s7",
+  title: "Cross",
+  type: "show",
+  audience: "solo",
+  year: "2024",
+  genre: ["Crime", "Action", "Thriller"],
+  plot: "Alex Cross, a homicide detective and forensic psychologist, hunts a dangerous serial killer.",
+  rt_critics: 55,
+  rt_audience: 82,
+  imdb: 6.8,
+  streaming_au: ["Prime Video"],
+  watched: false,
+  watching: false,
+  rating: null,
+  added: "2024-01-01"
+}, {
+  id: "s8",
+  title: "Mrs Davis",
+  type: "show",
+  audience: "together",
+  year: "2023",
+  genre: ["Sci-Fi", "Comedy", "Adventure"],
+  plot: "A nun wages battle against a world-controlling AI algorithm in a wildly inventive comedy.",
+  rt_critics: 92,
+  rt_audience: 72,
+  imdb: 7.1,
+  streaming_au: ["Peacock", "Stan"],
+  watched: false,
+  watching: false,
+  rating: null,
+  added: "2024-01-01"
+}, {
+  id: "s9",
+  title: "Slow Horses",
+  type: "show",
+  audience: "together",
+  year: "2022",
+  genre: ["Spy", "Thriller", "Drama"],
+  plot: "A group of disgraced MI5 agents navigate the unglamorous world of British intelligence.",
+  rt_critics: 97,
+  rt_audience: 91,
+  imdb: 8.1,
+  streaming_au: ["Apple TV+"],
+  watched: false,
+  watching: false,
+  rating: null,
+  added: "2024-01-01"
+}, {
+  id: "s10",
+  title: "For All Mankind",
+  type: "show",
+  audience: "together",
+  year: "2019",
+  genre: ["Sci-Fi", "Drama", "Alt-History"],
+  plot: "An alternate history where the Soviet Union lands on the moon first, sparking a continuing space race.",
+  rt_critics: 90,
+  rt_audience: 88,
+  imdb: 8.0,
+  streaming_au: ["Apple TV+"],
+  watched: false,
+  watching: false,
+  rating: null,
+  added: "2024-01-01"
+}, {
+  id: "s11",
+  title: "Lessons in Chemistry",
+  type: "show",
+  audience: "together",
+  year: "2023",
+  genre: ["Drama", "Comedy", "Period"],
+  plot: "A scientist-turned-cooking-show host in the 1960s empowers women through chemistry and ambition.",
+  rt_critics: 86,
+  rt_audience: 89,
+  imdb: 7.8,
+  streaming_au: ["Apple TV+"],
+  watched: false,
+  watching: false,
+  rating: null,
+  added: "2024-01-01"
+}, {
+  id: "s12",
+  title: "Scavengers Reign",
+  type: "show",
+  audience: "solo",
+  year: "2023",
+  genre: ["Animation", "Sci-Fi", "Survival"],
+  plot: "Survivors of a crashed cargo spaceship struggle to endure on a dangerous alien planet.",
+  rt_critics: 100,
+  rt_audience: 92,
+  imdb: 8.3,
+  streaming_au: ["Netflix", "Binge"],
+  watched: false,
+  watching: false,
+  rating: null,
+  added: "2024-01-01"
+}, {
+  id: "s13",
+  title: "Pantheon",
+  type: "show",
+  audience: "solo",
+  year: "2022",
+  genre: ["Animation", "Sci-Fi", "Thriller"],
+  plot: "A bullied teenager receives help from a mysterious online presence — her late father's uploaded mind.",
+  rt_critics: 100,
+  rt_audience: 93,
+  imdb: 8.2,
+  streaming_au: ["Binge"],
+  watched: false,
+  watching: false,
+  rating: null,
+  added: "2024-01-01"
+}, {
+  id: "s14",
+  title: "Resident Alien",
+  type: "show",
+  audience: "together",
+  year: "2021",
+  genre: ["Sci-Fi", "Comedy", "Mystery"],
+  plot: "An alien stranded on Earth assumes a murdered doctor's identity and slowly finds his humanity.",
+  rt_critics: 97,
+  rt_audience: 91,
+  imdb: 8.0,
+  streaming_au: ["Stan"],
+  watched: false,
+  watching: false,
+  rating: null,
+  added: "2024-01-01"
+}, {
+  id: "s15",
+  title: "Last Man on Earth",
+  type: "show",
+  audience: "together",
+  year: "2015",
+  genre: ["Comedy", "Sci-Fi"],
+  plot: "The apparent last man alive roams a deserted America — until he finds out he isn't so alone.",
+  rt_critics: 85,
+  rt_audience: 74,
+  imdb: 7.6,
+  streaming_au: [],
+  watched: false,
+  watching: false,
+  rating: null,
+  added: "2024-01-01"
+}, {
+  id: "s16",
+  title: "Kevin Can F**k Himself",
+  type: "show",
+  audience: "together",
+  year: "2021",
+  genre: ["Comedy", "Drama", "Thriller"],
+  plot: "A sitcom wife breaks out of her scripted role to reclaim her own life in a darkly funny deconstruction.",
+  rt_critics: 91,
+  rt_audience: 78,
+  imdb: 7.5,
+  streaming_au: ["Stan"],
+  watched: false,
+  watching: false,
+  rating: null,
+  added: "2024-01-01"
+}, {
+  id: "s17",
+  title: "Baskets",
+  type: "show",
+  audience: "solo",
+  year: "2016",
+  genre: ["Comedy", "Drama"],
+  plot: "A failed Parisian clown returns to Bakersfield to pursue his art while struggling with family dysfunction.",
+  rt_critics: 95,
+  rt_audience: 79,
+  imdb: 7.8,
+  streaming_au: [],
+  watched: false,
+  watching: false,
+  rating: null,
+  added: "2024-01-01"
+}, {
+  id: "s18",
+  title: "The Tick",
+  type: "show",
+  audience: "together",
+  year: "2016",
+  genre: ["Superhero", "Comedy", "Action"],
+  plot: "A neurotic accountant teams with a mysterious hero to fight evil in The City.",
+  rt_critics: 95,
+  rt_audience: 82,
+  imdb: 7.6,
+  streaming_au: ["Prime Video"],
+  watched: false,
+  watching: false,
+  rating: null,
+  added: "2024-01-01"
+}, {
+  id: "s19",
+  title: "Marry My Husband",
+  type: "show",
+  audience: "together",
+  year: "2024",
+  genre: ["Romance", "Fantasy", "Drama"],
+  plot: "A woman who discovers her husband's affair travels back in time to change the course of her life.",
+  rt_critics: 87,
+  rt_audience: 90,
+  imdb: 7.4,
+  streaming_au: ["Prime Video"],
+  watched: false,
+  watching: false,
+  rating: null,
+  added: "2024-01-01"
+}, {
+  id: "s20",
+  title: "Fired on Mars",
+  type: "show",
+  audience: "solo",
+  year: "2023",
+  genre: ["Animation", "Comedy", "Sci-Fi"],
+  plot: "A graphic designer is stranded on Mars after being laid off — stuck and broke 140 million miles from home.",
+  rt_critics: 83,
+  rt_audience: 76,
+  imdb: 7.1,
+  streaming_au: ["Binge", "Max"],
+  watched: false,
+  watching: false,
+  rating: null,
+  added: "2024-01-01"
+}, {
+  id: "s21",
+  title: "Made for Love",
+  type: "show",
+  audience: "together",
+  year: "2021",
+  genre: ["Sci-Fi", "Comedy", "Dark Comedy"],
+  plot: "A woman escapes her tech-mogul husband only to discover he's implanted a device to track her every move.",
+  rt_critics: 97,
+  rt_audience: 80,
+  imdb: 7.3,
+  streaming_au: ["Binge"],
+  watched: false,
+  watching: false,
+  rating: null,
+  added: "2024-01-01"
+}, {
+  id: "s22",
+  title: "Devs",
+  type: "show",
+  audience: "solo",
+  year: "2020",
+  genre: ["Sci-Fi", "Thriller", "Mystery"],
+  plot: "A software engineer investigates her boyfriend's disappearance at a secretive tech company.",
+  rt_critics: 81,
+  rt_audience: 80,
+  imdb: 7.8,
+  streaming_au: ["Disney+"],
+  watched: false,
+  watching: false,
+  rating: null,
+  added: "2024-01-01"
+}, {
+  id: "s23",
+  title: "Upload",
+  type: "show",
+  audience: "together",
+  year: "2020",
+  genre: ["Sci-Fi", "Comedy", "Romance"],
+  plot: "A young man uploaded to a virtual afterlife explores questions of love, class and authenticity.",
+  rt_critics: 94,
+  rt_audience: 85,
+  imdb: 7.9,
+  streaming_au: ["Prime Video"],
+  watched: false,
+  watching: false,
+  rating: null,
+  added: "2024-01-01"
+}, {
+  id: "s24",
+  title: "The Chestnut Man",
+  type: "show",
+  audience: "together",
+  year: "2021",
+  genre: ["Crime", "Thriller", "Mystery"],
+  plot: "Two detectives hunt a killer who leaves handmade chestnut dolls at each murder scene.",
+  rt_critics: 100,
+  rt_audience: 85,
+  imdb: 7.6,
+  streaming_au: ["Netflix"],
+  watched: false,
+  watching: false,
+  rating: null,
+  added: "2024-01-01"
+}, {
+  id: "s25",
+  title: "The Snow Girl",
+  type: "show",
+  audience: "together",
+  year: "2023",
+  genre: ["Crime", "Thriller", "Mystery"],
+  plot: "A journalist becomes obsessed with a girl's disappearance during a New Year's parade in Spain.",
+  rt_critics: 100,
+  rt_audience: 87,
+  imdb: 7.5,
+  streaming_au: ["Netflix"],
+  watched: false,
+  watching: false,
+  rating: null,
+  added: "2024-01-01"
+}, {
+  id: "s26",
+  title: "Vigil",
+  type: "show",
+  audience: "together",
+  year: "2021",
+  genre: ["Crime", "Thriller", "Mystery"],
+  plot: "A detective investigates a suspicious death aboard a nuclear submarine.",
+  rt_critics: 85,
+  rt_audience: 82,
+  imdb: 7.3,
+  streaming_au: ["Netflix", "Binge"],
+  watched: false,
+  watching: false,
+  rating: null,
+  added: "2024-01-01"
+}, {
+  id: "s27",
+  title: "Severance",
+  type: "show",
+  audience: "together",
+  year: "2022",
+  genre: ["Sci-Fi", "Thriller", "Drama"],
+  plot: "Office workers' memories are surgically divided between work and personal lives — until an act of rebellion.",
+  rt_critics: 97,
+  rt_audience: 90,
+  imdb: 8.7,
+  streaming_au: ["Apple TV+"],
+  watched: false,
+  watching: false,
+  rating: null,
+  added: "2024-01-01"
+}, {
+  id: "s28",
+  title: "Foundation",
+  type: "show",
+  audience: "together",
+  year: "2021",
+  genre: ["Sci-Fi", "Drama", "Epic"],
+  plot: "A mathematician develops a theory that predicts the collapse of the Galactic Empire.",
+  rt_critics: 74,
+  rt_audience: 79,
+  imdb: 7.4,
+  streaming_au: ["Apple TV+"],
+  watched: false,
+  watching: false,
+  rating: null,
+  added: "2024-01-01"
+}, {
+  id: "s29",
+  title: "The Deuce",
+  type: "show",
+  audience: "solo",
+  year: "2017",
+  genre: ["Drama", "Crime", "Period"],
+  plot: "An exploration of the porn industry and sex work in 1970s New York City.",
+  rt_critics: 92,
+  rt_audience: 87,
+  imdb: 8.1,
+  streaming_au: ["Binge", "Foxtel Now"],
+  watched: false,
+  watching: false,
+  rating: null,
+  added: "2024-01-01"
+}, {
+  id: "s30",
+  title: "Rough Diamonds",
+  type: "show",
+  audience: "together",
+  year: "2023",
+  genre: ["Crime", "Drama", "Thriller"],
+  plot: "An Antwerp diamond family's rogue brother returns home when his estranged son is found dead.",
+  rt_critics: 84,
+  rt_audience: 77,
+  imdb: 7.3,
+  streaming_au: ["Netflix"],
+  watched: false,
+  watching: false,
+  rating: null,
+  added: "2024-01-01"
+}, {
+  id: "s31",
+  title: "The Night Agent",
+  type: "show",
+  audience: "together",
+  year: "2023",
+  genre: ["Action", "Thriller", "Spy"],
+  plot: "An FBI agent discovers a conspiracy that reaches the highest levels of the US government.",
+  rt_critics: 67,
+  rt_audience: 84,
+  imdb: 7.7,
+  streaming_au: ["Netflix"],
+  watched: false,
+  watching: false,
+  rating: null,
+  added: "2024-01-01"
+}, {
+  id: "s32",
+  title: "The Consultant",
+  type: "show",
+  audience: "solo",
+  year: "2023",
+  genre: ["Thriller", "Dark Comedy", "Mystery"],
+  plot: "A shadowy consultant takes over a gaming company after its founder is murdered.",
+  rt_critics: 73,
+  rt_audience: 73,
+  imdb: 6.7,
+  streaming_au: ["Prime Video"],
+  watched: false,
+  watching: false,
+  rating: null,
+  added: "2024-01-01"
+}, {
+  id: "s33",
+  title: "Hanna",
+  type: "show",
+  audience: "together",
+  year: "2019",
+  genre: ["Action", "Thriller", "Spy"],
+  plot: "A young girl raised in the wilderness goes on the run from a relentless CIA agent.",
+  rt_critics: 80,
+  rt_audience: 83,
+  imdb: 7.4,
+  streaming_au: ["Prime Video"],
+  watched: false,
+  watching: false,
+  rating: null,
+  added: "2024-01-01"
+}, {
+  id: "s34",
+  title: "Dead Ringers",
+  type: "show",
+  audience: "solo",
+  year: "2023",
+  genre: ["Thriller", "Drama", "Horror"],
+  plot: "Twin gynaecologists use their patients as subjects for dangerous research in a feminist body-horror series.",
+  rt_critics: 85,
+  rt_audience: 71,
+  imdb: 7.1,
+  streaming_au: ["Prime Video"],
+  watched: false,
+  watching: false,
+  rating: null,
+  added: "2024-01-01"
+}, {
+  id: "s35",
+  title: "Full Circle",
+  type: "show",
+  audience: "together",
+  year: "2023",
+  genre: ["Crime", "Thriller", "Mystery"],
+  plot: "A botched kidnapping exposes connections between several New York City families.",
+  rt_critics: 79,
+  rt_audience: 68,
+  imdb: 6.8,
+  streaming_au: ["Binge", "Max"],
+  watched: false,
+  watching: false,
+  rating: null,
+  added: "2024-01-01"
+}, {
+  id: "s36",
+  title: "Powers",
+  type: "show",
+  audience: "solo",
+  year: "2015",
+  genre: ["Superhero", "Crime", "Drama"],
+  plot: "Two detectives in a world where superpowers exist investigate cases involving heroes and villains.",
+  rt_critics: 83,
+  rt_audience: 73,
+  imdb: 6.6,
+  streaming_au: [],
+  watched: false,
+  watching: false,
+  rating: null,
+  added: "2024-01-01"
+}, {
+  id: "s37",
+  title: "Mystery Science Theater 3000: The Return",
+  type: "show",
+  audience: "together",
+  year: "2017",
+  genre: ["Comedy", "Sci-Fi"],
+  plot: "A man and his robot friends are trapped in space, forced to watch terrible movies and mock them.",
+  rt_critics: 100,
+  rt_audience: 90,
+  imdb: 8.2,
+  streaming_au: ["Netflix"],
+  watched: false,
+  watching: false,
+  rating: null,
+  added: "2024-01-01"
+}, {
+  id: "s38",
+  title: "Dark",
+  type: "show",
+  audience: "solo",
+  year: "2017",
+  genre: ["Sci-Fi", "Mystery", "Thriller"],
+  plot: "Two missing children expose a time-travel conspiracy spanning four generations in a small German town.",
+  rt_critics: 95,
+  rt_audience: 94,
+  imdb: 8.7,
+  streaming_au: ["Netflix"],
+  watched: true,
+  watching: false,
+  rating: "loved",
+  added: "2024-01-01"
+}, {
+  id: "s39",
+  title: "Dark Matter",
+  type: "show",
+  audience: "together",
+  year: "2024",
+  genre: ["Sci-Fi", "Thriller"],
+  plot: "A physicist abducted into an alternate version of his life fights to return to his family.",
+  rt_critics: 82,
+  rt_audience: 72,
+  imdb: 7.5,
+  streaming_au: ["Apple TV+"],
+  watched: true,
+  watching: false,
+  rating: "loved",
+  added: "2024-01-01"
+}, {
+  id: "s40",
+  title: "BoJack Horseman",
+  type: "show",
+  audience: "solo",
+  year: "2014",
+  genre: ["Animation", "Dark Comedy", "Drama"],
+  plot: "A washed-up 90s sitcom horse tries to reclaim his former glory while wrestling with addiction and self-loathing.",
+  rt_critics: 98,
+  rt_audience: 94,
+  imdb: 8.7,
+  streaming_au: ["Netflix"],
+  watched: true,
+  watching: false,
+  rating: "loved",
+  added: "2024-01-01"
+}, {
+  id: "s41",
+  title: "Peaky Blinders",
+  type: "show",
+  audience: "together",
+  year: "2013",
+  genre: ["Crime", "Drama", "Period"],
+  plot: "A gangster family in 1920s Birmingham is led by the ruthless Tommy Shelby as he builds a criminal empire.",
+  rt_critics: 89,
+  rt_audience: 96,
+  imdb: 8.8,
+  streaming_au: ["Netflix"],
+  watched: true,
+  watching: false,
+  rating: "loved",
+  added: "2024-01-01"
+}, {
+  id: "s42",
+  title: "South Park",
+  type: "show",
+  audience: "solo",
+  year: "1997",
+  genre: ["Animation", "Comedy", "Satire"],
+  plot: "Four crude but surprisingly philosophical boys navigate life in a Colorado mountain town full of absurdity.",
+  rt_critics: 88,
+  rt_audience: 87,
+  imdb: 8.7,
+  streaming_au: ["Paramount+"],
+  watched: true,
+  watching: false,
+  rating: "loved",
+  added: "2024-01-01"
+}, {
+  id: "s43",
+  title: "Archer",
+  type: "show",
+  audience: "solo",
+  year: "2009",
+  genre: ["Animation", "Comedy", "Spy"],
+  plot: "The world's most self-destructive secret agent and his dysfunctional spy agency stumble through chaos.",
+  rt_critics: 90,
+  rt_audience: 91,
+  imdb: 8.1,
+  streaming_au: ["Disney+"],
+  watched: true,
+  watching: false,
+  rating: "loved",
+  added: "2024-01-01"
+}, {
+  id: "s44",
+  title: "The Office (US)",
+  type: "show",
+  audience: "together",
+  year: "2005",
+  genre: ["Comedy", "Mockumentary"],
+  plot: "A clueless regional manager leads his oblivious staff through the daily banality of a paper company.",
+  rt_critics: 81,
+  rt_audience: 96,
+  imdb: 9.0,
+  streaming_au: ["Netflix"],
+  watched: true,
+  watching: false,
+  rating: "loved",
+  added: "2024-01-01"
+}, {
+  id: "s45",
+  title: "The Office (UK)",
+  type: "show",
+  audience: "together",
+  year: "2001",
+  genre: ["Comedy", "Mockumentary"],
+  plot: "The original Slough paper merchant and his desperately embarrassing boss set the template for cringe comedy.",
+  rt_critics: 91,
+  rt_audience: 93,
+  imdb: 8.5,
+  streaming_au: ["Netflix", "Binge"],
+  watched: true,
+  watching: false,
+  rating: "loved",
+  added: "2024-01-01"
+}, {
+  id: "s46",
+  title: "Dept. Q",
+  type: "show",
+  audience: "together",
+  year: "2025",
+  genre: ["Crime", "Mystery", "Nordic Noir"],
+  plot: "A guilt-ridden Edinburgh detective leads a misfit cold-case unit through a darkly compelling murder investigation.",
+  rt_critics: 83,
+  rt_audience: 94,
+  imdb: 8.3,
+  streaming_au: ["Netflix"],
+  watched: true,
+  watching: false,
+  rating: "loved",
+  added: "2024-01-01"
+}, {
+  id: "s47",
+  title: "Landman",
+  type: "show",
+  audience: "together",
+  year: "2024",
+  genre: ["Drama", "Crime"],
+  plot: "A crisis manager navigates the boom-and-bust brutality of Texas oil country alongside roughnecks and billionaires.",
+  rt_critics: 78,
+  rt_audience: 63,
+  imdb: 8.2,
+  streaming_au: ["Paramount+"],
+  watched: false,
+  watching: true,
+  rating: "loved",
+  added: "2024-01-01"
+}, {
+  id: "s48",
+  title: "The Capture",
+  type: "show",
+  audience: "together",
+  year: "2019",
+  genre: ["Thriller", "Crime", "Spy"],
+  plot: "A detective uncovers a vast deepfake surveillance conspiracy reaching the heart of British intelligence.",
+  rt_critics: 92,
+  rt_audience: 88,
+  imdb: 7.8,
+  streaming_au: ["Netflix", "ABC iview"],
+  watched: false,
+  watching: true,
+  rating: "loved",
+  added: "2024-01-01"
+}, {
+  id: "s49",
+  title: "Euphoria",
+  type: "show",
+  audience: "together",
+  year: "2019",
+  genre: ["Drama", "Teen", "Psychological"],
+  plot: "A drug-addicted teenager and her circle navigate trauma, identity and addiction in hyper-stylised vignettes.",
+  rt_critics: 80,
+  rt_audience: 84,
+  imdb: 8.4,
+  streaming_au: ["Binge", "Foxtel Now"],
+  watched: false,
+  watching: true,
+  rating: "loved",
+  added: "2024-01-01"
+}, {
+  id: "s50",
+  title: "Formula 1: Drive to Survive",
+  type: "show",
+  audience: "together",
+  year: "2019",
+  genre: ["Documentary", "Sport"],
+  plot: "A fly-on-the-wall docuseries following Formula 1 teams and drivers through each racing season.",
+  rt_critics: 89,
+  rt_audience: 85,
+  imdb: 8.1,
+  streaming_au: ["Netflix"],
+  watched: false,
+  watching: true,
+  rating: "liked",
+  added: "2024-01-01"
+}, {\n  id: "s51",
+  title: "Spider-Noir",
+  type: "show",
+  audience: "solo",
+  year: "2026",
+  genre: ["Crime", "Mystery", "Thriller"],
+  plot: "An aging private investigator with spider powers navigates a noir-soaked 1930s New York crime underworld.",
+  rt_critics: 91,
+  rt_audience: 94,
+  imdb: 8.3,
+  streaming_au: ["Prime Video", "Max"],
+  watched: false,
+  watching: false,
+  rating: null,
+  added: "2026-06-27"\n}];
+const SK = "wl-v5";
+function load() {
+  try {
+    const r = localStorage.getItem(SK);
+    if (r) return JSON.parse(r);
+  } catch {}
+  return {
+    movies: MOVIES,
+    shows: SHOWS
+  };
+}
+function save(d) {
+  try {
+    localStorage.setItem(SK, JSON.stringify(d));
+  } catch {}
+}
+function RTBar({
+  critics,
+  audience
+}) {
+  if (critics == null && audience == null) return null;
+  const diff = critics != null && audience != null ? critics - audience : null;
+  const dl = diff != null ? Math.abs(diff) < 5 ? "aligned" : diff > 0 ? `critics +${Math.abs(diff)}` : `audience +${Math.abs(diff)}` : null;
+  const bar = (v, lbl) => v == null ? null : /*#__PURE__*/React.createElement("div", {
+    style: {
+      marginBottom: lbl.includes("Critics") ? 6 : 0
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "flex",
+      justifyContent: "space-between",
+      fontSize: 11,
+      color: C.muted,
+      marginBottom: 3
+    }
+  }, /*#__PURE__*/React.createElement("span", null, lbl), /*#__PURE__*/React.createElement("span", {
+    style: {
+      color: v >= 75 ? C.green : v >= 60 ? C.amber : C.red,
+      fontWeight: 700
+    }
+  }, v, "%")), /*#__PURE__*/React.createElement("div", {
+    style: {
+      height: 4,
+      background: C.border,
+      borderRadius: 2
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      height: "100%",
+      width: `${v}%`,
+      background: v >= 75 ? C.green : v >= 60 ? C.amber : C.red,
+      borderRadius: 2
+    }
+  })));
+  return /*#__PURE__*/React.createElement("div", {
+    style: {
+      marginBottom: 12
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 10,
+      letterSpacing: 1.5,
+      textTransform: "uppercase",
+      color: C.muted,
+      marginBottom: 8,
+      display: "flex",
+      justifyContent: "space-between"
+    }
+  }, /*#__PURE__*/React.createElement("span", null, "Rotten Tomatoes"), dl && /*#__PURE__*/React.createElement("span", {
+    style: {
+      color: diff != null && Math.abs(diff) > 20 ? C.amber : C.muted,
+      fontSize: 10
+    }
+  }, dl)), bar(critics, "🍅 Critics"), bar(audience, "🍿 Audience"));
+}
+function Card({
+  item,
+  onWatch,
+  onWatching,
+  onRate,
+  onDel
+}) {
+  const [open, setOpen] = useState(false);
+  const bc = item.watching ? C.watching : item.watched ? RC[item.rating] || C.amber : C.border;
+  return /*#__PURE__*/React.createElement("div", {
+    style: {
+      background: C.surface,
+      borderRadius: 10,
+      border: `1px solid ${C.border}`,
+      borderLeft: `4px solid ${bc}`,
+      marginBottom: 10,
+      overflow: "hidden"
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "flex",
+      gap: 12,
+      padding: "14px 14px 12px",
+      alignItems: "flex-start"
+    },
+    onClick: () => setOpen(o => !o)
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      width: 52,
+      height: 76,
+      borderRadius: 4,
+      flexShrink: 0,
+      background: `linear-gradient(160deg,hsl(${item.title.charCodeAt(0) * 7 % 360},35%,16%),hsl(${(item.title.charCodeAt(2) || 65) * 13 % 360},30%,11%))`,
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center",
+      fontSize: 20
+    }
+  }, item.type === "movie" ? "🎬" : "📺"), /*#__PURE__*/React.createElement("div", {
+    style: {
+      flex: 1,
+      minWidth: 0
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "flex",
+      alignItems: "center",
+      gap: 6,
+      marginBottom: 3,
+      flexWrap: "wrap"
+    }
+  }, /*#__PURE__*/React.createElement("span", {
+    style: {
+      fontSize: 10,
+      fontWeight: 700,
+      letterSpacing: 1.5,
+      textTransform: "uppercase",
+      color: AC[item.audience]
+    }
+  }, item.audience === "together" ? "Together" : "Solo"), item.watching && /*#__PURE__*/React.createElement("span", {
+    style: {
+      fontSize: 10,
+      fontWeight: 700,
+      color: C.watching,
+      background: C.watching + "22",
+      borderRadius: 4,
+      padding: "1px 6px"
+    }
+  }, "▶ Watching")), /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 15,
+      fontWeight: 600,
+      color: C.text,
+      lineHeight: 1.3,
+      marginBottom: 3
+    }
+  }, item.title), /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 12,
+      color: C.muted,
+      marginBottom: 5
+    }
+  }, item.year), /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "flex",
+      gap: 4,
+      flexWrap: "wrap",
+      marginBottom: 5
+    }
+  }, (item.genre || []).map(g => /*#__PURE__*/React.createElement("span", {
+    key: g,
+    style: gStyle(g)
+  }, g))), /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "flex",
+      gap: 5,
+      flexWrap: "wrap"
+    }
+  }, (item.rt_critics != null || item.rt_audience != null) && (() => {
+    const m = item.rt_critics ?? item.rt_audience;
+    const col = m >= 75 ? C.green : m >= 60 ? C.amber : C.red;
+    return /*#__PURE__*/React.createElement("span", {
+      style: {
+        fontSize: 11,
+        fontWeight: 600,
+        color: col,
+        background: C.bg,
+        borderRadius: 4,
+        padding: "1px 6px",
+        border: `1px solid ${C.border}`
+      }
+    }, "🍅 ", m, "%", item.rt_critics != null && item.rt_audience != null && item.rt_critics !== item.rt_audience ? ` / 🍿 ${item.rt_audience}%` : "");
+  })(), item.imdb != null && /*#__PURE__*/React.createElement("span", {
+    style: {
+      fontSize: 11,
+      fontWeight: 700,
+      background: C.imdb,
+      color: "#000",
+      borderRadius: 4,
+      padding: "1px 6px"
+    }
+  }, item.imdb))), /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "flex",
+      flexDirection: "column",
+      gap: 6,
+      flexShrink: 0
+    }
+  }, /*#__PURE__*/React.createElement("button", {
+    onClick: e => {
+      e.stopPropagation();
+      onWatching(item.id);
+    },
+    style: {
+      width: 28,
+      height: 28,
+      borderRadius: "50%",
+      border: `2px solid ${item.watching ? C.watching : C.border}`,
+      background: item.watching ? C.watching + "33" : "transparent",
+      cursor: "pointer",
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center",
+      fontSize: 13
+    }
+  }, "👁️"), /*#__PURE__*/React.createElement("button", {
+    onClick: e => {
+      e.stopPropagation();
+      onWatch(item.id);
+    },
+    style: {
+      width: 28,
+      height: 28,
+      borderRadius: "50%",
+      border: `2px solid ${item.watched ? C.amber : C.border}`,
+      background: item.watched ? C.amber : "transparent",
+      cursor: "pointer",
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center",
+      fontSize: 12,
+      color: C.bg,
+      fontWeight: 700
+    }
+  }, item.watched ? "✓" : ""))), open && /*#__PURE__*/React.createElement("div", {
+    style: {
+      borderTop: `1px solid ${C.border}`,
+      padding: "14px 14px 16px"
+    }
+  }, item.plot && /*#__PURE__*/React.createElement("p", {
+    style: {
+      fontSize: 13,
+      color: C.textDim,
+      margin: "0 0 16px",
+      lineHeight: 1.6
+    }
+  }, item.plot), /*#__PURE__*/React.createElement(RTBar, {
+    critics: item.rt_critics,
+    audience: item.rt_audience
+  }), item.imdb != null && /*#__PURE__*/React.createElement("div", {
+    style: {
+      marginBottom: 14
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 10,
+      letterSpacing: 1.5,
+      textTransform: "uppercase",
+      color: C.muted,
+      marginBottom: 6
+    }
+  }, "IMDb"), /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "flex",
+      alignItems: "center",
+      gap: 8
+    }
+  }, /*#__PURE__*/React.createElement("span", {
+    style: {
+      fontSize: 11,
+      fontWeight: 700,
+      background: C.imdb,
+      color: "#000",
+      borderRadius: 4,
+      padding: "2px 7px"
+    }
+  }, item.imdb), /*#__PURE__*/React.createElement("div", {
+    style: {
+      flex: 1,
+      height: 4,
+      background: C.border,
+      borderRadius: 2
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      height: "100%",
+      width: `${item.imdb / 10 * 100}%`,
+      background: C.imdb,
+      borderRadius: 2
+    }
+  })), /*#__PURE__*/React.createElement("span", {
+    style: {
+      fontSize: 11,
+      color: C.muted
+    }
+  }, "/10"))), item.streaming_au?.length > 0 && /*#__PURE__*/React.createElement("div", {
+    style: {
+      marginBottom: 14
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 10,
+      letterSpacing: 1.5,
+      textTransform: "uppercase",
+      color: C.muted,
+      marginBottom: 6
+    }
+  }, "Stream in Australia"), /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "flex",
+      flexWrap: "wrap",
+      gap: 6
+    }
+  }, item.streaming_au.map(s => /*#__PURE__*/React.createElement("span", {
+    key: s,
+    style: {
+      fontSize: 12,
+      padding: "3px 10px",
+      borderRadius: 20,
+      background: C.bg,
+      border: `1px solid ${C.border}`,
+      color: C.textDim
+    }
+  }, s)))), item.watched && /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 10,
+      letterSpacing: 1.5,
+      textTransform: "uppercase",
+      color: C.muted,
+      marginBottom: 8
+    }
+  }, "Your rating"), /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "flex",
+      gap: 6
+    }
+  }, Object.entries(RL).map(([k, l]) => /*#__PURE__*/React.createElement("button", {
+    key: k,
+    onClick: () => onRate(item.id, item.rating === k ? null : k),
+    style: {
+      flex: 1,
+      padding: "8px 4px",
+      borderRadius: 8,
+      border: "none",
+      cursor: "pointer",
+      fontSize: 11,
+      fontWeight: 600,
+      background: item.rating === k ? RC[k] : C.bg,
+      color: item.rating === k ? "#fff" : C.muted
+    }
+  }, l)))), /*#__PURE__*/React.createElement("button", {
+    onClick: () => onDel(item.id),
+    style: {
+      marginTop: 14,
+      fontSize: 12,
+      color: C.muted,
+      background: "none",
+      border: "none",
+      cursor: "pointer",
+      padding: 0
+    }
+  }, "Remove")));
+}
+function AddModal({
+  type,
+  onClose,
+  onAdd
+}) {
+  const [title, setTitle] = useState("");
+  const [aud, setAud] = useState("together");
+  const [busy, setBusy] = useState(false);
+  const [err, setErr] = useState("");
+  async function go() {
+    if (!title.trim()) {
+      setErr("Enter a title");
+      return;
+    }
+    setBusy(true);
+    setErr("");
+    const base = {
+      id: Date.now().toString(),
+      type,
+      audience: aud,
+      watched: false,
+      watching: false,
+      rating: null,
+      added: new Date().toISOString()
+    };
+    try {
+      const res = await fetch("https://api.anthropic.com/v1/messages", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          model: "claude-sonnet-4-6",
+          max_tokens: 800,
+          messages: [{
+            role: "user",
+            content: `For the ${type === "movie" ? "film" : "TV show"} "${title.trim()}", return ONLY JSON (no markdown): {"title":"","year":"","genre":[],"plot":"one sentence max 20 words","rt_critics":null,"rt_audience":null,"imdb":null,"streaming_au":[]} — streaming_au: Australia only services from: Netflix,Stan,Disney+,Apple TV+,Prime Video,Binge,Foxtel Now,Paramount+,SBS On Demand,ABC iview,9Now,10 Play,Peacock,Max,Hayu,Mubi`
+          }]
+        })
+      });
+      const d = await res.json();
+      const t = d.content?.find(b => b.type === "text")?.text || "{}";
+      const info = JSON.parse(t.replace(/```json|```/g, "").trim());
+      onAdd({
+        ...base,
+        title: info.title || title.trim(),
+        year: info.year || "",
+        genre: info.genre || [],
+        plot: info.plot || "",
+        rt_critics: info.rt_critics ?? null,
+        rt_audience: info.rt_audience ?? null,
+        imdb: info.imdb ?? null,
+        streaming_au: info.streaming_au || []
+      });
+    } catch {
+      setErr("Added with basic details");
+      onAdd({
+        ...base,
+        title: title.trim(),
+        year: "",
+        genre: [],
+        plot: "",
+        rt_critics: null,
+        rt_audience: null,
+        imdb: null,
+        streaming_au: []
+      });
+    }
+    setBusy(false);
+  }
+  return /*#__PURE__*/React.createElement("div", {
+    style: {
+      position: "fixed",
+      inset: 0,
+      background: "rgba(0,0,0,0.8)",
+      display: "flex",
+      alignItems: "flex-end",
+      justifyContent: "center",
+      zIndex: 100
+    },
+    onClick: onClose
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      background: C.surface,
+      borderRadius: "16px 16px 0 0",
+      padding: "28px 24px 48px",
+      width: "100%",
+      maxWidth: 480,
+      border: `1px solid ${C.border}`,
+      borderBottom: "none"
+    },
+    onClick: e => e.stopPropagation()
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 11,
+      letterSpacing: 2,
+      color: C.muted,
+      textTransform: "uppercase",
+      marginBottom: 16
+    }
+  }, "Add ", type === "movie" ? "film" : "TV show"), /*#__PURE__*/React.createElement("input", {
+    autoFocus: true,
+    value: title,
+    onChange: e => setTitle(e.target.value),
+    onKeyDown: e => e.key === "Enter" && go(),
+    placeholder: type === "movie" ? "e.g. Dune: Part Two" : "e.g. The Leftovers",
+    style: {
+      width: "100%",
+      background: C.bg,
+      border: `1px solid ${C.border}`,
+      borderRadius: 8,
+      padding: "12px 14px",
+      color: C.text,
+      fontSize: 16,
+      outline: "none",
+      boxSizing: "border-box",
+      marginBottom: 16
+    }
+  }), /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "flex",
+      gap: 8,
+      marginBottom: 20
+    }
+  }, ["together", "solo"].map(a => /*#__PURE__*/React.createElement("button", {
+    key: a,
+    onClick: () => setAud(a),
+    style: {
+      flex: 1,
+      padding: "10px 0",
+      borderRadius: 8,
+      border: "none",
+      cursor: "pointer",
+      fontSize: 13,
+      fontWeight: 600,
+      background: aud === a ? AC[a] : C.bg,
+      color: aud === a ? "#fff" : C.muted
+    }
+  }, a === "together" ? "👫 Together" : "🎧 Solo"))), err && /*#__PURE__*/React.createElement("div", {
+    style: {
+      color: C.red,
+      fontSize: 13,
+      marginBottom: 12
+    }
+  }, err), /*#__PURE__*/React.createElement("button", {
+    onClick: go,
+    disabled: busy,
+    style: {
+      width: "100%",
+      padding: "14px 0",
+      borderRadius: 8,
+      border: "none",
+      background: busy ? C.amberDim : C.amber,
+      color: C.bg,
+      fontSize: 15,
+      fontWeight: 700,
+      cursor: busy ? "wait" : "pointer"
+    }
+  }, busy ? "Fetching details…" : "Add to watchlist"), /*#__PURE__*/React.createElement("button", {
+    onClick: onClose,
+    style: {
+      width: "100%",
+      padding: "12px 0",
+      marginTop: 8,
+      border: "none",
+      background: "transparent",
+      color: C.muted,
+      fontSize: 14,
+      cursor: "pointer"
+    }
+  }, "Cancel")));
+}
+function App() {
+  const [data, setData] = useState({
+    movies: [],
+    shows: []
+  });
+  const [tab, setTab] = useState("shows");
+  const [filter, setFilter] = useState("all");
+  const [sort, setSort] = useState("added");
+  const [gf, setGf] = useState(null);
+  const [showAdd, setShowAdd] = useState(false);
+  const [search, setSearch] = useState("");
+  const [loaded, setLoaded] = useState(false);
+  useEffect(() => {
+    setData(load());
+    setLoaded(true);
+  }, []);
+  const upd = useCallback(nd => {
+    setData(nd);
+    save(nd);
+  }, []);
+  function add(item) {
+    const k = item.type === "movie" ? "movies" : "shows";
+    upd({
+      ...data,
+      [k]: [item, ...data[k]]
+    });
+    setShowAdd(false);
+    setTab(k);
+  }
+  function tog(id) {
+    const u = l => l.map(i => i.id === id ? {
+      ...i,
+      watched: !i.watched,
+      rating: !i.watched ? i.rating : null
+    } : i);
+    upd({
+      movies: u(data.movies),
+      shows: u(data.shows)
+    });
+  }
+  function togW(id) {
+    const u = l => l.map(i => i.id === id ? {
+      ...i,
+      watching: !i.watching
+    } : i);
+    upd({
+      movies: u(data.movies),
+      shows: u(data.shows)
+    });
+  }
+  function rate(id, r) {
+    const u = l => l.map(i => i.id === id ? {
+      ...i,
+      rating: r
+    } : i);
+    upd({
+      movies: u(data.movies),
+      shows: u(data.shows)
+    });
+  }
+  function del(id) {
+    upd({
+      movies: data.movies.filter(i => i.id !== id),
+      shows: data.shows.filter(i => i.id !== id)
+    });
+  }
+  const all = [...data.movies, ...data.shows];
+  const src = tab === "movies" ? data.movies : data.shows;
+  const genres = [...new Set(src.flatMap(i => i.genre || []))].sort();
+  const list = src.filter(i => {
+    const q = search.toLowerCase();
+    const ms = !q || i.title.toLowerCase().includes(q) || i.genre?.some(g => g.toLowerCase().includes(q));
+    const mf = filter === "all" || filter === "watching" && i.watching || filter === "unwatched" && !i.watched && !i.watching || filter === "watched" && i.watched || filter === "together" && i.audience === "together" || filter === "solo" && i.audience === "solo";
+    return ms && mf && (!gf || i.genre?.includes(gf));
+  }).sort((a, b) => {
+    if (sort === "title") return a.title.localeCompare(b.title);
+    if (sort === "rt") return (b.rt_critics ?? 0) - (a.rt_critics ?? 0);
+    if (sort === "imdb") return (b.imdb ?? 0) - (a.imdb ?? 0);
+    if (sort === "genre") return (a.genre?.[0] || "").localeCompare(b.genre?.[0] || "");
+    if (a.watching && !b.watching) return -1;
+    if (!a.watching && b.watching) return 1;
+    return 0;
+  });
+  const wc = all.filter(i => i.watching).length;
+  const wd = all.filter(i => i.watched).length;
+  if (!loaded) return /*#__PURE__*/React.createElement("div", {
+    style: {
+      background: C.bg,
+      minHeight: "100vh",
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center",
+      color: C.muted
+    }
+  }, "Loading…");
+  return /*#__PURE__*/React.createElement("div", {
+    style: {
+      background: C.bg,
+      minHeight: "100vh",
+      color: C.text,
+      maxWidth: 480,
+      margin: "0 auto",
+      paddingBottom: 80
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      padding: "24px 16px 0"
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 11,
+      letterSpacing: 2,
+      color: C.muted,
+      textTransform: "uppercase",
+      marginBottom: 4
+    }
+  }, "Your watchlist"), /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "flex",
+      justifyContent: "space-between",
+      alignItems: "flex-start",
+      marginBottom: 14
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 26,
+      fontWeight: 700,
+      fontFamily: "Georgia,serif",
+      color: C.text,
+      lineHeight: 1.1
+    }
+  }, "What's", /*#__PURE__*/React.createElement("br", null), "watching?"), /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "flex",
+      gap: 12,
+      paddingTop: 4,
+      fontSize: 12,
+      color: C.muted
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      textAlign: "center"
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      color: C.watching,
+      fontWeight: 700,
+      fontSize: 16
+    }
+  }, wc), "watching"), /*#__PURE__*/React.createElement("div", {
+    style: {
+      textAlign: "center"
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      color: C.amber,
+      fontWeight: 700,
+      fontSize: 16
+    }
+  }, data.movies.length), "films"), /*#__PURE__*/React.createElement("div", {
+    style: {
+      textAlign: "center"
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      color: C.together,
+      fontWeight: 700,
+      fontSize: 16
+    }
+  }, data.shows.length), "shows"), /*#__PURE__*/React.createElement("div", {
+    style: {
+      textAlign: "center"
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      color: C.green,
+      fontWeight: 700,
+      fontSize: 16
+    }
+  }, wd), "done"))), /*#__PURE__*/React.createElement("input", {
+    value: search,
+    onChange: e => setSearch(e.target.value),
+    placeholder: "Search titles or genres…",
+    style: {
+      width: "100%",
+      background: C.surface,
+      border: `1px solid ${C.border}`,
+      borderRadius: 8,
+      padding: "9px 14px",
+      color: C.text,
+      fontSize: 14,
+      outline: "none",
+      boxSizing: "border-box"
+    }
+  })), /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "flex",
+      borderBottom: `1px solid ${C.border}`,
+      marginTop: 14
+    }
+  }, [["movies", "🎬 Films"], ["shows", "📺 Shows"]].map(([k, l]) => /*#__PURE__*/React.createElement("button", {
+    key: k,
+    onClick: () => setTab(k),
+    style: {
+      flex: 1,
+      padding: "12px 0",
+      border: "none",
+      background: "transparent",
+      color: tab === k ? C.amber : C.muted,
+      borderBottom: `2px solid ${tab === k ? C.amber : "transparent"}`,
+      fontSize: 13,
+      fontWeight: 600,
+      cursor: "pointer"
+    }
+  }, l))), /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "flex",
+      gap: 6,
+      overflowX: "auto",
+      padding: "10px 16px 0",
+      scrollbarWidth: "none"
+    }
+  }, [{
+    k: "all",
+    l: "All"
+  }, {
+    k: "watching",
+    l: "▶ Watching"
+  }, {
+    k: "unwatched",
+    l: "To watch"
+  }, {
+    k: "watched",
+    l: "Watched"
+  }, {
+    k: "together",
+    l: "👫 Together"
+  }, {
+    k: "solo",
+    l: "🎧 Solo"
+  }].map(o => /*#__PURE__*/React.createElement("button", {
+    key: o.k,
+    onClick: () => setFilter(o.k),
+    style: {
+      flexShrink: 0,
+      padding: "6px 14px",
+      borderRadius: 20,
+      border: `1px solid ${filter === o.k ? o.k === "watching" ? C.watching : C.amber : C.border}`,
+      background: filter === o.k ? o.k === "watching" ? C.watching : C.amber : "transparent",
+      color: filter === o.k ? C.bg : C.muted,
+      fontSize: 12,
+      fontWeight: 600,
+      cursor: "pointer"
+    }
+  }, o.l))), /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "flex",
+      gap: 6,
+      padding: "8px 16px 0",
+      alignItems: "center"
+    }
+  }, /*#__PURE__*/React.createElement("span", {
+    style: {
+      fontSize: 11,
+      color: C.muted,
+      flexShrink: 0
+    }
+  }, "Sort:"), [{
+    k: "added",
+    l: "Recent"
+  }, {
+    k: "title",
+    l: "A–Z"
+  }, {
+    k: "rt",
+    l: "RT"
+  }, {
+    k: "imdb",
+    l: "IMDb"
+  }, {
+    k: "genre",
+    l: "Genre"
+  }].map(o => /*#__PURE__*/React.createElement("button", {
+    key: o.k,
+    onClick: () => setSort(o.k),
+    style: {
+      flexShrink: 0,
+      padding: "5px 11px",
+      borderRadius: 20,
+      border: `1px solid ${sort === o.k ? C.solo : C.border}`,
+      background: sort === o.k ? C.solo + "33" : "transparent",
+      color: sort === o.k ? C.solo : C.muted,
+      fontSize: 11,
+      fontWeight: 600,
+      cursor: "pointer"
+    }
+  }, o.l))), /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "flex",
+      gap: 5,
+      overflowX: "auto",
+      padding: "8px 16px 0",
+      scrollbarWidth: "none"
+    }
+  }, /*#__PURE__*/React.createElement("button", {
+    onClick: () => setGf(null),
+    style: {
+      flexShrink: 0,
+      padding: "4px 12px",
+      borderRadius: 20,
+      border: `1px solid ${!gf ? C.amber : C.border}`,
+      background: !gf ? C.amber + "22" : "transparent",
+      color: !gf ? C.amber : C.muted,
+      fontSize: 11,
+      fontWeight: 600,
+      cursor: "pointer"
+    }
+  }, "All genres"), genres.map(g => /*#__PURE__*/React.createElement("button", {
+    key: g,
+    onClick: () => setGf(gf === g ? null : g),
+    style: {
+      flexShrink: 0,
+      ...gStyle(g),
+      padding: "4px 12px",
+      cursor: "pointer",
+      fontWeight: 600,
+      opacity: gf === g ? 1 : 0.75
+    }
+  }, g))), /*#__PURE__*/React.createElement("div", {
+    style: {
+      padding: "10px 16px 0",
+      fontSize: 11,
+      color: C.muted
+    }
+  }, "👁️ watching now · ✓ finished"), /*#__PURE__*/React.createElement("div", {
+    style: {
+      padding: "10px 16px 20px"
+    }
+  }, list.length === 0 ? /*#__PURE__*/React.createElement("div", {
+    style: {
+      textAlign: "center",
+      padding: "60px 20px",
+      color: C.muted
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 40,
+      marginBottom: 16
+    }
+  }, tab === "movies" ? "🎬" : "📺"), /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 15,
+      color: C.textDim
+    }
+  }, search ? `No results for "${search}"` : gf ? `No ${gf} ${tab}` : `No ${filter === "all" ? "" : filter + " "}${tab}`)) : list.map(item => /*#__PURE__*/React.createElement(Card, {
+    key: item.id,
+    item: item,
+    onWatch: tog,
+    onWatching: togW,
+    onRate: rate,
+    onDel: del
+  }))), /*#__PURE__*/React.createElement("button", {
+    onClick: () => setShowAdd(true),
+    style: {
+      position: "fixed",
+      bottom: 28,
+      right: 16,
+      width: 56,
+      height: 56,
+      borderRadius: "50%",
+      background: C.amber,
+      border: "none",
+      color: C.bg,
+      fontSize: 28,
+      cursor: "pointer",
+      boxShadow: `0 4px 24px ${C.amber}55`,
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center",
+      zIndex: 50
+    }
+  }, "+"), showAdd && /*#__PURE__*/React.createElement(AddModal, {
+    type: tab === "movies" ? "movie" : "show",
+    onClose: () => setShowAdd(false),
+    onAdd: add
+  }));
+}
+ReactDOM.createRoot(document.getElementById("root")).render(/*#__PURE__*/React.createElement(App, null));
+
+</script>
+</body>
+</html>
